@@ -1,4 +1,4 @@
-name: PBMD_tools_dev
+name: PBMDTools_dev
 channels:
   - defaults
 dependencies:
