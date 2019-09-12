@@ -5,11 +5,13 @@
 
 Perform analysis on molecular dynamics protein sequences encoded as Protein Blocks.
 
-TODO: Makefile, gitignore, docu(RTD), CHANGELOG, LICENSE, environment, tests, notebooks, devtools, CI, name, lab notebook, log, Binder(cit)
+TODO: Makefile, gitignore, docu(RTD), CHANGELOG, environment, tests, notebooks, devtools, CI, name, lab notebook, log, Binder(cit)  
+Specify Version  
+Host on own channel
 
-https://github.com/Genalico/GSAtools
-http://pandinilab.org/sa.html
-https://academic.oup.com/bioinformatics/article/29/16/2053/200020
+https://github.com/Genalico/GSAtools  
+http://pandinilab.org/sa.html  
+https://academic.oup.com/bioinformatics/article/29/16/2053/200020  
 
 Citation, usage/quickstart, installation, dependencies, intro
 
