@@ -1,6 +1,6 @@
 [![License: BSD](https://img.shields.io/badge/License-BSD-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
-# PBMDTools
+# MDPBTools
 > Protein Block Molecular Dynamics Tools
 
 Perform analysis on molecular dynamics protein sequences encoded as Protein Blocks.
