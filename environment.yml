@@ -1,4 +1,4 @@
-name: PBTools_dev
+name: PBTools
 channels:
   - defaults
   - bioconda
@@ -16,7 +16,6 @@ dependencies:
   - pytest
   - setuptools
   - sphinx
-  - spyder
   - pip:
     - pbxplore
 
