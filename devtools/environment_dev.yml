@@ -9,6 +9,7 @@ dependencies:
   - jupyter
   - numpy
   - pandas
+  - mdanalysis
   - networkx
   - pycodestyle
   - pydocstyle

@@ -10,6 +10,7 @@ dependencies:
   - numpy
   - pandas
   - networkx
+  - mdanalysis
   - pycodestyle
   - pydocstyle
   - pylint
