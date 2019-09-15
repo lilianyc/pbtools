@@ -1,4 +1,4 @@
-name: MDPBTools
+name: PBTools
 channels:
   - defaults
 dependencies:
