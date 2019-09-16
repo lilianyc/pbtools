@@ -11,3 +11,8 @@ __pycache__/
 
 # Sphinx temp folder
 doc/source/_*
+
+# Files for packaging
+build/
+*.egg-info
+/dist/
