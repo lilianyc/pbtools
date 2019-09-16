@@ -20,7 +20,7 @@ import pbxplore as pbx
 #DATA_DIR = Path().resolve().parent.joinpath("data")
 
 PB_NAMES = 'abcdefghijklmnop'
-DEBUG = False
+DEBUG = True
 
 # Set custom logger.
 log = logging.getLogger(__name__)
@@ -33,8 +33,8 @@ log.setLevel(logging.DEBUG)
 
 
 
-trajectory = "md.trr"
-topology = "md.gro"
+trajectory = "psi_md_traj.xtc"
+topology = "psi_md_traj.gro"
 
 '''
 
@@ -200,12 +200,12 @@ def mutual_information(pos1, pos2):
     assert len(pos1) == len(pos2), "Series have different lengths"
     MI = 0
 
-    for PB1, PB2 in itertools.combinations(PB_NAMES, 2):
+    for PB1, PB2 in itertools.permutations(PB_NAMES, 2):
         PB1_count = (pos1 == PB1).sum()
         PB2_count = (pos2 == PB2).sum()
         joint_prob = ((pos1 == PB1) &
               (pos2 == PB2)).sum() / PB1_count
-        # Denominator is 0
+        # Denominator or joint probability are 0.
         if not (PB1_count and PB2_count and joint_prob):
             continue
         PB1_prob = PB1_count / len(pos1)
@@ -236,8 +236,8 @@ def mutual_information_matrix(sequences):
     df_seq = pd.DataFrame((list(seq) for seq in sequences))
     positions = len(sequences[0])
     MI_matrix = np.zeros((positions, positions))
-    # Get all permutations of positions.
-    for pos1, pos2 in itertools.permutations(range(positions), 2):
+    # Get all combinations of positions.
+    for pos1, pos2 in itertools.combinations(range(positions), 2):
         log.debug(f"{pos1}, {pos2}")
         MI = mutual_information(df_seq[pos1], df_seq[pos2])
         MI_matrix[pos1, pos2] = MI
