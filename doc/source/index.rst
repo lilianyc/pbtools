@@ -3,13 +3,20 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to pbtools's documentation!
+Welcome to PBTools's documentation!
 ===================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
+
+Reference manual
+================
+.. toctree::
+    :maxdepth: 2
+
+    api/pbtools
 
 
 Indices and tables
