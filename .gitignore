@@ -6,4 +6,8 @@ src/**/*.gro
 src/**/*.npz
 !src/pbtools/pbtools.py
 
+# Pycache
 __pycache__/
+
+# Sphinx temp folder
+doc/source/_*
