@@ -6,6 +6,13 @@
 Welcome to PBTools's documentation!
 ===================================
 
+**Version** |release|
+
+PBTools is a program to perform analysis on molecular dynamics protein sequences encoded as Protein Blocks.
+
+It is a simple implementation of GSATools by `Pandini et al.
+<https://academic.oup.com/bioinformatics/article/29/16/2053/200020/>`_
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
