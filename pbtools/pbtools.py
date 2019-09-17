@@ -1,6 +1,15 @@
 
 """Main module of pbtools
 
+Provide functions to compute the Mutual Information matrix of sequences.
+The Command-Line Interface is defined here.
+
+Example
+-------
+Running the script directly
+    $ python pbtools.py -o matrix.csv -p 1BTA.pdb
+will provide file 'matrix.csv'
+
 """
 
 import argparse
@@ -15,7 +24,7 @@ import pandas as pd
 import pbxplore as pbx
 
 # TODO : Fix version not found
-#from pbtools import __version__
+from pbtools import __version__
 
 PB_NAMES = 'abcdefghijklmnop'
 DEBUG = False
@@ -30,11 +39,6 @@ log.addHandler(log_handler)
 log.setLevel(logging.INFO)
 
 
-
-trajectory = "psi_md_traj.xtc"
-topology = "psi_md_traj.gro"
-
-
 class Reader:
     """
     """
@@ -44,9 +48,16 @@ class Reader:
 
         Parameters
         ----------
-        pdb_name : 
-            bla
-        trajectory 
+        pdb_name : str
+            PDB file or directory containing PDB files.
+        trajectory : str
+            | Trajectory file as recognized by MDAnalysis :
+            | https://www.mdanalysis.org/docs/documentation_pages/
+              coordinates/init.html 
+        topology : str
+            | Topology file as recognized by MDAnalysis :
+            | https://www.mdanalysis.org/docs/documentation_pages/
+              topology/init.html
         """
         accepted_input = ["pdb_name", "trajectory", "topology"]
 
@@ -77,7 +88,6 @@ class Reader:
                     self.sequences.append(pb_seq)
             except (TypeError, ValueError):
                 pass
-
 
 
 def user_inputs():
@@ -123,8 +133,8 @@ def user_inputs():
     group.add_argument("-g", action="store", metavar='TOPOLOGY',
                        help="name of the topology file")
 
-#    parser.add_argument('-v', '--version', action='version',
-#                        version='%(prog)s {}'.format(__version__))
+    parser.add_argument('-v', '--version', action='version',
+                        version='%(prog)s {}'.format(__version__))
     # get all arguments
     options = parser.parse_args()
 
@@ -170,7 +180,7 @@ def cli(args=None):
     ----------
     args : list of str, optional
         CLI arguments, args are used for testing (default is None for CLI).
-    
+
     Returns
     -------
     None
@@ -216,9 +226,11 @@ def cli(args=None):
                       "This typically means there are issues with "
                       "some residues coordinates. "
                       f"Check your input file ({comment})")
-    # TODO: use all_sequences
+
+    log.info("Calculating the Mutual Information matrix ...")
     MI_matrix = mutual_information_matrix(all_sequences)
     # Write to a file
+    log.info("Writing the matrix ...")
     df = pd.DataFrame(MI_matrix)
     df.to_csv(options.output)
 
@@ -302,6 +314,9 @@ def mutual_information_matrix(sequences):
 
 if __name__ == "__main__":
     if DEBUG:
+        trajectory = "psi_md_traj.xtc"
+        topology = "psi_md_traj.gro"
+
         sequences = []
         try:
             for chain_name, chain in pbx.chains_from_trajectory(trajectory,
@@ -311,32 +326,30 @@ if __name__ == "__main__":
                 sequences.append(pb_seq)
         except Exception as exc:
             print("Error", exc)
-        
+
         # Count matrix with one row per sequence and one column per PB.
         # The readthedocs documentation has the 2 confused.
         # !!!: Duplicate sequences seem grouped together.
         count_matrix = pbx.analysis.count_matrix(sequences)
-        
+ 
         count_matrix.shape
-        
+
         df = pd.DataFrame(count_matrix)
         # Probability matrix.
         proba_df = df / len(sequences)
         # See if all probabilities are < 1.
         assert (proba_df <= 1).all().all()
-        
+
         small_seq = sequences[:]
-    
-        
+
         c = mutual_information_matrix(small_seq)
-        
+
         for i in itertools.combinations(PB_NAMES, 2):
             print(i, end=" ") 
-        
-    
+
         df_seq = pd.DataFrame((list(seq) for seq in small_seq))
-        
-        
+
         b = mutual_information(df_seq[2], df_seq[3])
+
     cli()
 

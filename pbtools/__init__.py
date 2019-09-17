@@ -1,7 +1,7 @@
 
 """Perform analysis on protein sequences encoded as Protein Blocks
 
-Provide functions to compute a matrix of Mutual Information.
+Provide functions to compute a Mutual Information matrix from sequences.
 
 """
 
