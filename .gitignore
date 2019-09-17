@@ -1,10 +1,9 @@
 # Molecular Dynamics Input files
-src/**/*.trr
-src/**/*.pdb
-src/**/*.xtc
-src/**/*.gro
-src/**/*.npz
-!src/pbtools/pbtools.py
+pbtools/**/*.trr
+pbtools/**/*.pdb
+pbtools/**/*.xtc
+pbtools/**/*.gro
+pbtools/**/*.npz
 
 # Pycache
 __pycache__/
