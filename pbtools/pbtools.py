@@ -220,7 +220,7 @@ def cli(args=None):
     MI_matrix = mutual_information_matrix(all_sequences)
     # Write to a file
     df = pd.DataFrame(MI_matrix)
-    df.to_csv(options.o)
+    df.to_csv(options.output)
 
 
 
