@@ -14,13 +14,11 @@ import numpy as np
 import pandas as pd
 import pbxplore as pbx
 
-
-#print(globals().get("__file__"))
-#DATA_DIR = Path(__file__).parent.resolve().joinpath("data")
-#DATA_DIR = Path().resolve().parent.joinpath("data")
+# TODO : Fix version not found
+#from pbtools import __version__
 
 PB_NAMES = 'abcdefghijklmnop'
-DEBUG = True
+DEBUG = False
 
 # Set custom logger.
 log = logging.getLogger(__name__)
@@ -29,14 +27,58 @@ log_formatter = logging.Formatter("[%(asctime)s] %(levelname)-8s: %(message)s",
                                   "%Y-%m-%d, %H:%M:%S")
 log_handler.setFormatter(log_formatter)
 log.addHandler(log_handler)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 
 
 trajectory = "psi_md_traj.xtc"
 topology = "psi_md_traj.gro"
 
-'''
+
+class Reader:
+    """
+    """
+
+    def __init__(self, **kwargs):
+        """Initialize a list of sequences from file(s).
+
+        Parameters
+        ----------
+        pdb_name : 
+            bla
+        trajectory 
+        """
+        accepted_input = ["pdb_name", "trajectory", "topology"]
+
+        for key in kwargs:
+            if key not in accepted_input:
+                log.warning(f"argument {key} not recognized")
+
+        self.pdb_name = kwargs.get("pdb_name", [])
+        self.trajectory = kwargs.get("trajectory", [])
+        self.topology = kwargs.get("topology", [])
+
+        self.sequences = []
+
+        # If a pdb is defined, it has precedence over trajectory/topology.
+        if self.pdb_name:
+            for chain_name, chain in pbx.chains_from_files(self.pdb_name):
+                self.dihedrals = chain.get_phi_psi_angles()
+                pb_seq = pbx.assign(dihedrals)
+                self.sequences.append(pb_seq)
+
+        # Both trajectory are defined
+        elif self.trajectory and self.topology:
+            try:
+                for chain_name, chain in pbx.chains_from_trajectory(trajectory,
+                                                                    topology):
+                    self.dihedrals = chain.get_phi_psi_angles()
+                    pb_seq = pbx.assign(dihedrals)
+                    self.sequences.append(pb_seq)
+            except (TypeError, ValueError):
+                pass
+
+
 
 def user_inputs():
     """Parse and handle the submitted command line.
@@ -64,14 +106,15 @@ def user_inputs():
 
     """
     parser = argparse.ArgumentParser(
-        description='Read PDB structures and assign protein blocs (PBs).')
+        description="Read PDB structures and write a mutual information "
+                    "matrix as csv.")
 
     # arguments
-    parser.add_argument("-p", action="append",
+    parser.add_argument("-p", "--pdb", action="append",
                         help=("name of a pdb file "
                               "or name of a directory containing pdb files"))
-    parser.add_argument("-o", action="store", required=True,
-                        help="name for results")
+    parser.add_argument("-o", "--output", type=str, action="store",
+                        required=True, help="name for results")
     # arguments for MDanalysis
     group = parser.add_argument_group(
         title='other options to handle molecular dynamics trajectories')
@@ -80,13 +123,13 @@ def user_inputs():
     group.add_argument("-g", action="store", metavar='TOPOLOGY',
                        help="name of the topology file")
 
-    parser.add_argument('-v', '--version', action='version',
-                        version='%(prog)s {}'.format(__version__))
+#    parser.add_argument('-v', '--version', action='version',
+#                        version='%(prog)s {}'.format(__version__))
     # get all arguments
     options = parser.parse_args()
 
     # check options
-    if not options.p:
+    if not options.pdb:
         if not options.x:
             parser.print_help()
             parser.error("use at least option -p or -x")
@@ -96,24 +139,25 @@ def user_inputs():
 
     # check files
     pdb_name_lst = []
-    if options.p:
+    if options.pdb:
         for name in options.p:
             # input is a file: store file name
-            if Path(name).isfile():
+            if Path(name).is_file():
                 pdb_name_lst.append(name)
             # input is a directory: list and store all PDB and PDBx/mmCIF files
-            elif Path(name).isdir():
-#                pdb_name_lst = list(Path().glob("sequence*.pdb"))
-#                for extension in (pbx.structure.PDB_EXTENSIONS + pbx.structure.PDB.PDBx_EXTENSIONS):
-#                    pdb_name_lst += glob.glob(os.path.join(name, "*" + extension))
-                pass
+            elif Path(name).is_dir():
+                for extension in (pbx.structure.PDB_EXTENSIONS 
+                                  + pbx.structure.PDB.PDBx_EXTENSIONS):
+                    pdb_name_lst += list(Path().joinpath(name)
+                                         .glob("*" + extension))
+
             # input is neither a file nor a directory.
-            elif (not Path(name).isfile() or not Path(name).isdir()):
+            elif (not Path(name).is_file() or not Path(name).is_dir()):
                 parser.error("{0}: not a valid file or directory".format(name))
     else:
-        if not Path(options.x).isfile():
+        if not Path(options.x).is_file():
             sys.exit("{0}: not a valid file".format(options.x))
-        elif not Path(options.g).isfile():
+        elif not Path(options.g).is_file():
             sys.exit("{0}: not a valid file".format(options.g))
 
     return options, pdb_name_lst
@@ -146,7 +190,7 @@ def cli(args=None):
         args = sys.argv[1:]
 
     options, pdb_name_lst = user_inputs()
-    if options.p:
+    if options.pdb:
         if pdb_name_lst:
             print("{} PDB file(s) to process".format(len(pdb_name_lst)))
         else:
@@ -172,8 +216,14 @@ def cli(args=None):
                       "This typically means there are issues with "
                       "some residues coordinates. "
                       f"Check your input file ({comment})")
+    # TODO: use all_sequences
+    MI_matrix = mutual_information_matrix(all_sequences)
+    # Write to a file
+    df = pd.DataFrame(MI_matrix)
+    df.to_csv(options.o)
 
-'''
+
+
 
 def mutual_information(pos1, pos2):
     """Computes the MI from 2 Series.
@@ -203,10 +253,14 @@ def mutual_information(pos1, pos2):
     for PB1, PB2 in itertools.permutations(PB_NAMES, 2):
         PB1_count = (pos1 == PB1).sum()
         PB2_count = (pos2 == PB2).sum()
+        # Denominator is 0 so is the entropy.
+        if not (PB1_count and PB2_count):
+            continue
+
         joint_prob = ((pos1 == PB1) &
-              (pos2 == PB2)).sum() / PB1_count
-        # Denominator or joint probability are 0.
-        if not (PB1_count and PB2_count and joint_prob):
+                      (pos2 == PB2)).sum() / PB1_count
+        # Joint probability are 0.
+        if not joint_prob:
             continue
         PB1_prob = PB1_count / len(pos1)
         PB2_prob = PB2_count / len(pos1)
@@ -269,9 +323,9 @@ if __name__ == "__main__":
         # Probability matrix.
         proba_df = df / len(sequences)
         # See if all probabilities are < 1.
-        assert (proba_df < 1).all().all()
+        assert (proba_df <= 1).all().all()
         
-        small_seq = sequences[:10]
+        small_seq = sequences[:]
     
         
         c = mutual_information_matrix(small_seq)
@@ -284,5 +338,5 @@ if __name__ == "__main__":
         
         
         b = mutual_information(df_seq[2], df_seq[3])
-
+    cli()
 
