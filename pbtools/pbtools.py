@@ -262,6 +262,7 @@ def mutual_information(pos1, pos2):
     assert len(pos1) == len(pos2), "Series have different lengths"
     MI = 0
 
+    # Unknown PB (z) are not taken into account.
     for PB1, PB2 in itertools.permutations(PB_NAMES, 2):
         PB1_count = (pos1 == PB1).sum()
         PB2_count = (pos2 == PB2).sum()
@@ -270,7 +271,7 @@ def mutual_information(pos1, pos2):
             continue
 
         joint_prob = ((pos1 == PB1) &
-                      (pos2 == PB2)).sum() / PB1_count
+                      (pos2 == PB2)).sum() / len(pos1)
         # Joint probability are 0.
         if not joint_prob:
             continue
