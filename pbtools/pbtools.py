@@ -258,30 +258,32 @@ def mutual_information(pos1, pos2):
         If the Series have different lengths
 
     """
-
     assert len(pos1) == len(pos2), "Series have different lengths"
     MI = 0
 
     # Unknown PB (z) are not taken into account.
-    for PB1, PB2 in itertools.permutations(PB_NAMES, 2):
-        PB1_count = (pos1 == PB1).sum()
-        PB2_count = (pos2 == PB2).sum()
-        # Denominator is 0 so is the entropy.
-        if not (PB1_count and PB2_count):
-            continue
+    # The double loop gets all combinations with duplicates (ie: ("a", "a")).
+    for PB1 in PB_NAMES:
+        for PB2 in PB_NAMES:
+            PB1_count = (pos1 == PB1).sum()
+            PB2_count = (pos2 == PB2).sum()
+            # Denominator is 0 so is the entropy.
+            if not (PB1_count and PB2_count):
+                continue
+    
+            joint_prob = ((pos1 == PB1) &
+                          (pos2 == PB2)).sum() / len(pos1)
+            # Joint probability is 0.
+            if not joint_prob:
+                continue
+            PB1_prob = PB1_count / len(pos1)
+            PB2_prob = PB2_count / len(pos1)
 
-        joint_prob = ((pos1 == PB1) &
-                      (pos2 == PB2)).sum() / len(pos1)
-        # Joint probability are 0.
-        if not joint_prob:
-            continue
-        PB1_prob = PB1_count / len(pos1)
-        PB2_prob = PB2_count / len(pos1)
+            log.debug(f"{joint_prob}, {PB1_prob}, {PB2_prob}")
+            # TODO : Possibility to change formula.
+            MI += joint_prob * math.log((joint_prob/(PB1_prob * PB2_prob)),
+                                        len(PB_NAMES))
 
-        log.debug(f"{joint_prob}, {PB1_prob}, {PB2_prob}")
-
-        MI += joint_prob + math.log((joint_prob/(PB1_prob * PB2_prob)),
-                                    len(PB_NAMES))
     return MI
 
 
@@ -303,9 +305,11 @@ def mutual_information_matrix(sequences):
     df_seq = pd.DataFrame((list(seq) for seq in sequences))
     positions = len(sequences[0])
     MI_matrix = np.zeros((positions, positions))
+
     # Get all combinations of positions.
     for pos1, pos2 in itertools.combinations(range(positions), 2):
-        log.debug(f"{pos1}, {pos2}")
+
+        log.debug(f"POSITIONS: {pos1}, {pos2}")
         MI = mutual_information(df_seq[pos1], df_seq[pos2])
         MI_matrix[pos1, pos2] = MI
 
@@ -351,6 +355,8 @@ if __name__ == "__main__":
         df_seq = pd.DataFrame((list(seq) for seq in small_seq))
 
         b = mutual_information(df_seq[2], df_seq[3])
+        mutual_information_matrix(["aaa", "cab"])
+        mutual_information(pd.Series(list("ac")), pd.Series(list("ab")))
 
     cli()
 
