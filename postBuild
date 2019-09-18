@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# Install local package for Binder
+pip install -e .
+
