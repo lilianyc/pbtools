@@ -12,3 +12,7 @@ doc/source/_*
 build/
 *.egg-info
 /dist/
+
+# Large data files
+data/**/*
+!data/run.sh
