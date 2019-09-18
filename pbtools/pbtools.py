@@ -19,6 +19,7 @@ import math
 from pathlib import Path
 import sys
 
+import networkx as nx
 import numpy as np
 import pandas as pd
 import pbxplore as pbx
@@ -29,7 +30,6 @@ from pbtools import __version__
 PB_NAMES = "abcdefghijklmnop"
 MISSING_BLOCK = "z"
 
-
 # Set custom logger.
 log = logging.getLogger(__name__)
 log_handler = logging.StreamHandler()
@@ -38,57 +38,6 @@ log_formatter = logging.Formatter("[%(asctime)s] %(levelname)-8s: %(message)s",
 log_handler.setFormatter(log_formatter)
 log.addHandler(log_handler)
 log.setLevel(logging.INFO)
-
-
-class Reader:
-    """
-    """
-
-    def __init__(self, **kwargs):
-        """Initialize a list of sequences from file(s).
-
-        Parameters
-        ----------
-        pdb_name : str
-            PDB file or directory containing PDB files.
-        trajectory : str
-            | Trajectory file as recognized by MDAnalysis :
-            | https://www.mdanalysis.org/docs/documentation_pages/
-              coordinates/init.html 
-        topology : str
-            | Topology file as recognized by MDAnalysis :
-            | https://www.mdanalysis.org/docs/documentation_pages/
-              topology/init.html
-        """
-        accepted_input = ["pdb_name", "trajectory", "topology"]
-
-        for key in kwargs:
-            if key not in accepted_input:
-                log.warning(f"argument {key} not recognized")
-
-        self.pdb_name = kwargs.get("pdb_name", [])
-        self.trajectory = kwargs.get("trajectory", [])
-        self.topology = kwargs.get("topology", [])
-
-        self.sequences = []
-
-        # If a pdb is defined, it has precedence over trajectory/topology.
-        if self.pdb_name:
-            for chain_name, chain in pbx.chains_from_files(self.pdb_name):
-                self.dihedrals = chain.get_phi_psi_angles()
-                pb_seq = pbx.assign(dihedrals)
-                self.sequences.append(pb_seq)
-
-        # Both trajectory are defined
-        elif self.trajectory and self.topology:
-            try:
-                for chain_name, chain in pbx.chains_from_trajectory(trajectory,
-                                                                    topology):
-                    self.dihedrals = chain.get_phi_psi_angles()
-                    pb_seq = pbx.assign(dihedrals)
-                    self.sequences.append(pb_seq)
-            except (TypeError, ValueError):
-                pass
 
 
 def user_inputs():
@@ -126,6 +75,8 @@ def user_inputs():
                               "or name of a directory containing pdb files"))
     parser.add_argument("-o", "--output", type=str, action="store",
                         required=True, help="name for results")
+    parser.add_argument("-n", "--network", type=str, action="store",
+                        help="name for network output (GML format)")
     # arguments for MDanalysis
     group = parser.add_argument_group(
         title='other options to handle molecular dynamics trajectories')
@@ -233,11 +184,18 @@ def cli(args=None):
     log.info("Calculating the Mutual Information matrix ...")
     MI_matrix = mutual_information_matrix(all_sequences)
     # Write to a file
-    log.info("Writing the matrix ...")
+    log.info(f"Writing the matrix as {options.output} ...")
     df = pd.DataFrame(MI_matrix)
     df.to_csv(options.output)
 
-
+    # Add option in CLI, centrality
+    # Creating a network.
+    if options.network:
+        log.info("Creating a network ...")
+        PB_graph = interaction_graph(MI_matrix)
+        log.info(f"Writing the network as {options.network} ...")
+        # Write the graph to GML format.
+        nx.write_gml(PB_graph, path= options.network)
 
 
 def mutual_information(pos1, pos2):
@@ -275,7 +233,7 @@ def mutual_information(pos1, pos2):
             # Denominator is 0 so is the entropy.
             if not (PB1_count and PB2_count):
                 continue
-    
+
             joint_prob = ((pos1 == PB1) &
                           (pos2 == PB2)).sum() / len(pos1)
             # Joint probability is 0.
@@ -285,7 +243,7 @@ def mutual_information(pos1, pos2):
             PB2_prob = PB2_count / len(pos1)
 
             log.debug(f"{joint_prob}, {PB1_prob}, {PB2_prob}")
-            # TODO : Possibility to change formula.
+            # TODO : Possibility to change formula ?
             MI += joint_prob * math.log((joint_prob/(PB1_prob * PB2_prob)),
                                         len(PB_NAMES))
 
@@ -325,50 +283,36 @@ def mutual_information_matrix(sequences):
     return MI_matrix
 
 
+def interaction_graph(matrix):
+    """Create a networkx graph object from a (square) matrix.
+
+    Parameters
+    ----------
+    matrix : numpy.ndarray
+        | Matrix of mutual information, the information for the edges
+          is taken from the upper matrix
+
+    Returns
+    -------
+    graph : networkx.Graph()
+        The graph with MI as weighted edges and positions as nodes
+
+    Raises
+    ------
+    AssertionError
+        If the matrix is not square
+
+    """
+    # Assert if the matrix is a square matrix.
+    assert matrix.shape[0] == matrix.shape[1], "The matrix is not square"
+    graph = nx.Graph()
+    positions = len(matrix)
+
+    for pos1, pos2 in itertools.combinations(range(positions), 2):
+        graph.add_edge(pos1, pos2, weight=matrix[pos1, pos2])
+
+    return graph
+
 
 if __name__ == "__main__":
-    DEBUG = False
-    if DEBUG:
-        trajectory = "psi_md_traj.xtc"
-        topology = "psi_md_traj.gro"
-
-        sequences = []
-        try:
-            for chain_name, chain in pbx.chains_from_trajectory(trajectory,
-                                                                topology):
-                dihedrals = chain.get_phi_psi_angles()
-                pb_seq = pbx.assign(dihedrals)
-                sequences.append(pb_seq)
-        except Exception as exc:
-            print("Error", exc)
-
-        # Count matrix with one row per sequence and one column per PB.
-        # The readthedocs documentation has the 2 confused.
-        # !!!: Duplicate sequences seem grouped together.
-        count_matrix = pbx.analysis.count_matrix(sequences)
- 
-        count_matrix.shape
-
-        df = pd.DataFrame(count_matrix)
-        # Probability matrix.
-        proba_df = df / len(sequences)
-        # See if all probabilities are < 1.
-        assert (proba_df <= 1).all().all()
-
-        small_seq = sequences[:]
-
-        c = mutual_information_matrix(small_seq)
-
-        for i in itertools.combinations(PB_NAMES, 2):
-            print(i, end=" ") 
-
-        df_seq = pd.DataFrame((list(seq) for seq in small_seq))
-
-        b = mutual_information(df_seq[2], df_seq[3])
-        mutual_information_matrix(["aaa", "cab"])
-        mutual_information(pd.Series(list("ac")), pd.Series(list("ab")))
-        for PB1, PB2 in itertools.product(PB_NAMES, repeat=2): pass
-        for PB1 in PB_NAMES:
-            for PB2 in PB_NAMES: pass
     cli()
-

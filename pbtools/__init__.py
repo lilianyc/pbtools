@@ -13,10 +13,12 @@ __maintainer__ = "Lilian Yang-crosson"
 
 from .pbtools import (PB_NAMES,
                       MISSING_BLOCK,
+                      interaction_graph,
                       mutual_information,
                       mutual_information_matrix)
 
 __all__ = ["PB_NAMES",
            "MISSING_BLOCK",
+           "interaction_graph",
            "mutual_information",
            "mutual_information_matrix"]

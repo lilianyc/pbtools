@@ -8,6 +8,7 @@
 
 PBTools is a program to perform analysis on molecular dynamics protein sequences encoded as Protein Blocks. Protein Blocks are structures defined by [De Brevern *et al.*](https://www.ncbi.nlm.nih.gov/pubmed/11025540) to analyze local conformations of proteins.   
 The program a simple Python re-implementation of GSATools by [Pandini *et al.*](https://academic.oup.com/bioinformatics/article/29/16/2053/200020) using these Protein Blocks as a structural alphabet.
+
 Try the demo with Binder: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/lilianyc/pbtools/master)
 
 ## Requirements
@@ -68,6 +69,9 @@ Provide the version
 
 - `-o, --output`:  
 Give the name of the output file
+
+- `-n, --network`:  
+Give the name of the network file
 
 - `-p, --pdb`:  
 Name of PDB file(s) or a directory containing PDB files
