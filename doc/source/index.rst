@@ -19,6 +19,7 @@ User manual
     :maxdepth: 2
 
     notebooks/mutual_information
+    notebooks/network_manipulation
 
 
 Reference manual
