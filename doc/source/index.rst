@@ -13,9 +13,12 @@ PBTools is a program to perform analysis on molecular dynamics protein sequences
 It is a simple implementation of GSATools by `Pandini et al.
 <https://academic.oup.com/bioinformatics/article/29/16/2053/200020/>`_
 
+User manual
+===========
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+    :maxdepth: 2
+
+    notebooks/mutual_information
 
 
 Reference manual

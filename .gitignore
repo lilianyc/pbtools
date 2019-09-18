@@ -16,3 +16,6 @@ build/
 # Large data files
 data/**/*
 !data/run.sh
+
+# Jupyter notebook
+.ipynb_checkpoints
