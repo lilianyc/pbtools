@@ -8,6 +8,19 @@ import pytest
 
 import pbtools as pbt
 
+# Precision of float approximations.
+REL = 1e-6
+
+
+def test_mutual_information():
+    assert pbt.mutual_information(pd.Series(["a", "b"]), pd.Series(["a", "c"])) \
+           == pytest.approx(0.25, REL)
+
+    with pytest.raises(AssertionError):
+        pbt.mutual_information(1, 2)
+        pbt.mutual_information([], [])
+        pbt.mutual_information(pd.Series([]), pd.Series([1]))
+
 
 @pytest.fixture(scope="session")
 def get_MI_matrix():
@@ -24,9 +37,9 @@ def get_MI_matrix():
             ]
 
 
-def test_mutual_information():
+def test_mutual_information_matrix(get_MI_matrix):
 
-    for data in get_MI_matrix():
+    for data in get_MI_matrix:
         sequences = data[0]
         expected = data[1]
         assert pbt.mutual_information_matrix(sequences) == pytest.approx(expected)

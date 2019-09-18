@@ -26,8 +26,9 @@ import pbxplore as pbx
 # TODO : Fix version not found
 from pbtools import __version__
 
-PB_NAMES = 'abcdefghijklmnop'
-DEBUG = False
+PB_NAMES = "abcdefghijklmnop"
+MISSING_BLOCK = "z"
+
 
 # Set custom logger.
 log = logging.getLogger(__name__)
@@ -227,6 +228,8 @@ def cli(args=None):
                       "some residues coordinates. "
                       f"Check your input file ({comment})")
 
+    log.info(f"There are {len(all_sequences)} sequences of length "
+             f"{len(all_sequences[0])}")
     log.info("Calculating the Mutual Information matrix ...")
     MI_matrix = mutual_information_matrix(all_sequences)
     # Write to a file
@@ -238,7 +241,7 @@ def cli(args=None):
 
 
 def mutual_information(pos1, pos2):
-    """Computes the MI from 2 Series.
+    """Computes the Mutual Information from 2 Series of Protein Blocks.
 
     Parameters
     ----------
@@ -250,14 +253,16 @@ def mutual_information(pos1, pos2):
     Returns
     -------
     MI : float
-        Mutual Information of the 2 positions
+        Mutual Information of the 2 positions.
 
     Raises
     ------
     AssertionError
-        If the Series have different lengths
+        If Series are not provided or have different lengths.
 
     """
+    assert isinstance(pos1, pd.Series) and isinstance(pos2, pd.Series), \
+           "pandas.Series have to be provided as argument"
     assert len(pos1) == len(pos2), "Series have different lengths"
     MI = 0
 
@@ -288,7 +293,7 @@ def mutual_information(pos1, pos2):
 
 
 def mutual_information_matrix(sequences):
-    """Return the matrix of Mutual Informations for all positions.
+    """Return the matrix of Mutual Information for all positions.
 
     Parameters
     ----------
@@ -298,11 +303,15 @@ def mutual_information_matrix(sequences):
     Returns
     -------
     MI_matrix : numpy.ndarray
-        Matrix of Mutual informations.
+        Matrix of Mutual Informations.
 
     """
-    # Create dataframe from a generator.
+    # Create dataframe of sequences from a generator.
     df_seq = pd.DataFrame((list(seq) for seq in sequences))
+    # Replace potential unrecognized protein blocks by NaN.
+    df_seq = df_seq[df_seq.isin(list(PB_NAMES))]
+    # If sequences have != lengths, replace them with missing block "z".
+    df_seq.fillna(MISSING_BLOCK)
     positions = len(sequences[0])
     MI_matrix = np.zeros((positions, positions))
 
@@ -318,6 +327,7 @@ def mutual_information_matrix(sequences):
 
 
 if __name__ == "__main__":
+    DEBUG = False
     if DEBUG:
         trajectory = "psi_md_traj.xtc"
         topology = "psi_md_traj.gro"
@@ -357,6 +367,8 @@ if __name__ == "__main__":
         b = mutual_information(df_seq[2], df_seq[3])
         mutual_information_matrix(["aaa", "cab"])
         mutual_information(pd.Series(list("ac")), pd.Series(list("ab")))
-
+        for PB1, PB2 in itertools.product(PB_NAMES, repeat=2): pass
+        for PB1 in PB_NAMES:
+            for PB2 in PB_NAMES: pass
     cli()
 

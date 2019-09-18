@@ -11,7 +11,12 @@ __version__ = "0.1.0"
 __maintainer__ = "Lilian Yang-crosson"
 
 
-from .pbtools import (mutual_information, mutual_information_matrix)
+from .pbtools import (PB_NAMES,
+                      MISSING_BLOCK,
+                      mutual_information,
+                      mutual_information_matrix)
 
-__all__ = ["mutual_information",
+__all__ = ["PB_NAMES",
+           "MISSING_BLOCK",
+           "mutual_information",
            "mutual_information_matrix"]
