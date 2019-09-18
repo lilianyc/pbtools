@@ -1,4 +1,7 @@
 [![License: BSD](https://img.shields.io/badge/License-BSD-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+[![Build Status](https://travis-ci.org/lilianyc/pbtools.svg?branch=master)](https://travis-ci.org/lilianyc/pbtools)
+[![Documentation Status](https://readthedocs.org/projects/pbtools-md/badge/?version=latest)](https://pbtools-md.readthedocs.io/en/latest/?badge=latest)
+
 
 # PBTools
 > Protein Block Molecular Dynamics Tools
