@@ -24,8 +24,11 @@ import numpy as np
 import pandas as pd
 import pbxplore as pbx
 
-# TODO : Fix version not found
-from pbtools import __version__
+# Cannot import version when launching file directly.
+try:
+    from pbtools import __version__
+except ImportError:
+    __version__ = "Version not found"
 
 PB_NAMES = "abcdefghijklmnop"
 MISSING_BLOCK = "z"
@@ -102,14 +105,14 @@ def user_inputs():
     # check files
     pdb_name_lst = []
     if options.pdb:
-        for name in options.p:
+        for name in options.pdb:
             # input is a file: store file name
             if Path(name).is_file():
                 pdb_name_lst.append(name)
             # input is a directory: list and store all PDB and PDBx/mmCIF files
             elif Path(name).is_dir():
-                for extension in (pbx.structure.PDB_EXTENSIONS 
-                                  + pbx.structure.PDB.PDBx_EXTENSIONS):
+                for extension in (pbx.structure.PDB_EXTENSIONS
+                                  + pbx.structure.PDBx_EXTENSIONS):
                     pdb_name_lst += list(Path().joinpath(name)
                                          .glob("*" + extension))
 
@@ -136,7 +139,7 @@ def cli(args=None):
     Returns
     -------
     None
-        Writes a tsv file.
+        Writes a csv file and possibly a gml file.
 
     Raises
     ------
@@ -195,7 +198,7 @@ def cli(args=None):
         PB_graph = interaction_graph(MI_matrix)
         log.info(f"Writing the network as {options.network} ...")
         # Write the graph to GML format.
-        nx.write_gml(PB_graph, path= options.network)
+        nx.write_gml(PB_graph, path=options.network)
 
 
 def mutual_information(pos1, pos2):

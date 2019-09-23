@@ -10,6 +10,7 @@
 PBTools is a program to perform analysis on molecular dynamics protein sequences encoded as Protein Blocks. Protein Blocks are structures defined by [De Brevern *et al.*](https://www.ncbi.nlm.nih.gov/pubmed/11025540) to analyze local conformations of proteins.   
 The program a simple Python re-implementation of GSATools by [Pandini *et al.*](https://academic.oup.com/bioinformatics/article/29/16/2053/200020) using these Protein Blocks as a structural alphabet.
 
+The documentation can be found [here](https://pbtools-md.readthedocs.io/en/latest/).  
 Try the demo with Binder: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/lilianyc/pbtools/master)
 
 ## Requirements
@@ -18,8 +19,16 @@ Try the demo with Binder: [![Binder](https://mybinder.org/badge_logo.svg)](https
 - PBXplore
 - pandas
 - numpy
+- NetworkX
 
 ## Installation
+
+### From GitHub
+
+Install directly the git development version with:
+```shell
+pip install git+https://github.com/lilianyc/pbtools.git
+```
 
 ### Developer mode
 
@@ -27,8 +36,8 @@ Install [conda](https://conda.io/projects/conda/en/latest/user-guide/install/ind
 
 Clone the repository:
 ```shell
-$ git clone https://github.com/lilianyc/projet_court
-$ cd projet_court
+$ git clone https://github.com/lilianyc/pbtools
+$ cd pbtools
 ```
 
 Create conda environment:
